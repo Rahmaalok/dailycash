@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kelola keuangan pribadi dengan Money Tracker - aplikasi manajemen keuangan yang mudah dan efektif">
+    <title>Money Tracker - Kelola Keuangan & Menabung</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header role="banner">
+            <div class="header-content">
+                <h1>💰 Money Tracker</h1>
+                <p>Kelola keuangan pribadi Anda dengan mudah dan efektif</p>
+            </div>
+            <div class="header-controls">
+                <div class="current-date" id="current-date" aria-live="polite"></div>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="main-content">
+                <section class="input-section" aria-labelledby="transaction-form-title">
+                    <h2 id="transaction-form-title">📝 Tambah Transaksi Baru</h2>
+                    <form id="transaction-form" novalidate>
+                        <div class="form-group">
+                            <label for="description">Keterangan Transaksi</label>
+                            <input type="text" id="description" placeholder="Contoh: Belanja bulanan, Gaji, dll" required maxlength="100">
+                            <div class="error-message" id="description-error" hidden></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount">Jumlah (Rp)</label>
+                            <div class="amount-input-container">
+                                <span class="currency-symbol">Rp</span>
+                                <input type="number" id="amount" placeholder="0" min="1" max="1000000000" step="1" required>
+                            </div>
+                            <div class="error-message" id="amount-error" hidden></div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="type">Jenis Transaksi</label>
+                                <select id="type" required>
+                                    <option value="income">💵 Pemasukan</option>
+                                    <option value="expense">💸 Pengeluaran</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="category">Kategori</label>
+                                <select id="category" required>
+                                    <optgroup label="🛒 Pengeluaran">
+                                        <option value="makanan">🍽️ Makanan & Minuman</option>
+                                        <option value="transportasi">🚗 Transportasi</option>
+                                        <option value="hiburan">🎬 Hiburan</option>
+                                        <option value="tagihan">📋 Tagihan & Utilitas</option>
+                                        <option value="belanja">🛍️ Belanja</option>
+                                        <option value="kesehatan">🏥 Kesehatan</option>
+                                        <option value="pendidikan">📚 Pendidikan</option>
+                                        <option value="tabungan">💾 Tabungan</option>
+                                    </optgroup>
+                                    <optgroup label="💰 Pemasukan">
+                                        <option value="gaji">💼 Gaji</option>
+                                        <option value="investasi">📈 Investasi</option>
+                                        <option value="bonus">🎁 Bonus</option>
+                                        <option value="hadiah">🎯 Hadiah</option>
+                                        <option value="freelance">👨‍💻 Freelance</option>
+                                        <option value="lainnya">🔶 Lainnya</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="date">Tanggal Transaksi</label>
+                            <input type="date" id="date" required max="">
+                            <div class="error-message" id="date-error" hidden></div>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" id="submit-btn">
+                            <span class="btn-icon">➕</span>
+                            Tambah Transaksi
+                        </button>
+                    </form>
+                </section>
+
+                <section class="summary-section" aria-labelledby="summary-title">
+                    <h2 id="summary-title">📊 Ringkasan Keuangan</h2>
+                    <div class="summary-cards">
+                        <div class="card income-card">
+                            <div class="card-icon">📥</div>
+                            <h3>Total Pemasukan</h3>
+                            <p id="total-income">Rp 0</p>
+                            <div class="card-trend" id="income-trend"></div>
+                        </div>
+                        <div class="card expense-card">
+                            <div class="card-icon">📤</div>
+                            <h3>Total Pengeluaran</h3>
+                            <p id="total-expenses">Rp 0</p>
+                            <div class="card-trend" id="expense-trend"></div>
+                        </div>
+                        <div class="card balance-card">
+                            <div class="card-icon">⚖️</div>
+                            <h3>Saldo Saat Ini</h3>
+                            <p id="balance">Rp 0</p>
+                            <div class="card-trend" id="balance-trend"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="expense-chart" aria-label="Grafik pengeluaran per kategori" role="img"></canvas>
+                    </div>
+
+                    <div class="quick-stats">
+                        <h3>📈 Statistik Cepat</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Transaksi Bulan Ini</span>
+                                <span class="stat-value" id="monthly-transactions">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Rata-rata Pengeluaran/hari</span>
+                                <span class="stat-value" id="avg-daily-expense">Rp 0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Transaksi Terbanyak</span>
+                                <span class="stat-value" id="top-category">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Savings Section -->
+            <section class="savings-section" aria-labelledby="savings-title">
+                <div class="section-header">
+                    <h2 id="savings-title">🎯 Target Menabung</h2>
+                    <button id="add-saving-goal" class="btn-primary">
+                        <span class="btn-icon">➕</span>
+                        Tambah Target
+                    </button>
+                </div>
+
+                <div class="savings-goals" id="savings-goals">
+                    <div class="empty-state">
+                        <div class="empty-icon">💰</div>
+                        <h3>Belum ada target menabung</h3>
+                        <p>Mulai rencanakan masa depan Anda dengan menetapkan target menabung</p>
+                        <button id="create-first-goal" class="btn-primary">Buat Target Pertama</button>
+                    </div>
+                </div>
+
+                <div class="quick-save">
+                    <h3>💸 Tabung Sekarang</h3>
+                    <div class="quick-save-form">
+                        <select id="quick-save-goal" aria-label="Pilih target menabung">
+                            <option value="">Pilih target menabung</option>
+                        </select>
+                        <input type="number" id="quick-save-amount" placeholder="Jumlah" min="1" aria-label="Jumlah tabungan">
+                        <button id="quick-save-btn" class="btn-primary">Tabung</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="transactions-section" aria-labelledby="transactions-title">
+                <div class="section-header">
+                    <h2 id="transactions-title">📋 Daftar Transaksi</h2>
+                    <div class="export-controls">
+                        <button id="export-btn" class="btn-secondary">
+                            📄 Export Data
+                        </button>
+                        <button id="backup-btn" class="btn-secondary" title="Backup data">
+                            💾 Backup
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="filter-type">Filter:</label>
+                        <select id="filter-type" aria-label="Filter berdasarkan jenis transaksi">
+                            <option value="all">Semua Jenis</option>
+                            <option value="income">Pemasukan</option>
+                            <option value="expense">Pengeluaran</option>
+                        </select>
+                        <select id="filter-category" aria-label="Filter berdasarkan kategori">
+                            <option value="all">Semua Kategori</option>
+                        </select>
+                        <select id="filter-month" aria-label="Filter berdasarkan bulan">
+                            <option value="all">Semua Bulan</option>
+                        </select>
+                        <button id="reset-filters" class="btn-secondary">🔄 Reset Filter</button>
+                    </div>
+                    <div class="search-group">
+                        <input type="text" id="search-input" placeholder="Cari transaksi..." aria-label="Cari transaksi">
+                        <button id="search-btn" class="btn-secondary">🔍 Cari</button>
+                    </div>
+                </div>
+
+                <div class="transactions-header">
+                    <span>Total ditampilkan: <strong id="transactions-count">0</strong> transaksi</span>
+                    <div class="sort-options">
+                        <select id="sort-by" aria-label="Urutkan transaksi">
+                            <option value="date-desc">Terbaru</option>
+                            <option value="date-asc">Terlama</option>
+                            <option value="amount-desc">Jumlah Tertinggi</option>
+                            <option value="amount-asc">Jumlah Terendah</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="transactions-list" id="transactions-list" aria-live="polite">
+                    <div class="empty-state">
+                        <div class="empty-icon">💸</div>
+                        <h3>Belum ada transaksi</h3>
+                        <p>Mulai kelola keuangan Anda dengan menambahkan transaksi pertama</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal untuk tambah/edit target menabung -->
+    <div id="savings-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Tambah Target Menabung</h3>
+                <button class="close-modal" aria-label="Tutup modal">&times;</button>
+            </div>
+            <form id="savings-form" novalidate>
+                <input type="hidden" id="saving-goal-id">
+                
+                <div class="form-group">
+                    <label for="goal-name">Nama Target</label>
+                    <input type="text" id="goal-name" placeholder="Contoh: Beli Laptop, Dana Liburan" required maxlength="50">
+                    <div class="error-message" id="goal-name-error" hidden></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="target-amount">Target Jumlah (Rp)</label>
+                    <input type="number" id="target-amount" placeholder="1000000" min="1000" max="10000000000" required>
+                    <div class="error-message" id="target-amount-error" hidden></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="saved-amount">Jumlah Awal (Rp)</label>
+                    <input type="number" id="saved-amount" placeholder="0" min="0" max="10000000000">
+                    <small>Isi jika sudah ada tabungan sebelumnya</small>
+                    <div class="error-message" id="saved-amount-error" hidden></div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="target-date">Target Tanggal</label>
+                        <input type="date" id="target-date" required min="">
+                        <div class="error-message" id="target-date-error" hidden></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="goal-category">Kategori Target</label>
+                        <select id="goal-category" required>
+                            <option value="dana-darurat">🆘 Dana Darurat</option>
+                            <option value="investasi">📈 Investasi</option>
+                            <option value="liburan">✈️ Liburan</option>
+                            <option value="gadget">📱 Gadget</option>
+                            <option value="kendaraan">🚗 Kendaraan</option>
+                            <option value="rumah">🏠 Rumah</option>
+                            <option value="pendidikan">🎓 Pendidikan</option>
+                            <option value="pernikahan">💍 Pernikahan</option>
+                            <option value="hobi">🎨 Hobi</option>
+                            <option value="lainnya">🔶 Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="goal-notes">Catatan (opsional)</label>
+                    <textarea id="goal-notes" placeholder="Deskripsi target menabung..." rows="3" maxlength="200"></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary close-modal">Batal</button>
+                    <button type="submit" class="btn-primary">Simpan Target</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk riwayat menabung -->
+    <div id="savings-history-modal" class="modal" role="dialog" aria-labelledby="savings-history-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="savings-history-title">Riwayat Menabung</h3>
+                <button class="close-modal" aria-label="Tutup modal">&times;</button>
+            </div>
+            <div class="savings-history" id="savings-history-content">
+                <!-- Riwayat akan diisi oleh JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" hidden>
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">Memproses...</div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
